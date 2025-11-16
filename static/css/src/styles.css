@@ -32,6 +32,24 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Baseball Card Tokens - Default/Neutral */
+    --baseball-card-light: 0 0% 99%;           /* Light backgrounds */
+    --baseball-card-white: 0 0% 100%;          /* White backgrounds */
+    --baseball-card-dark: 0 0% 2%;             /* Dark foregrounds */
+    --baseball-card-black: 0 0% 0%;            /* Black foregrounds */
+    --baseball-card-gray-light: 0 0% 70%;      /* Light grays */
+    --baseball-card-gray-mid: 0 0% 50%;        /* Mid grays */
+    --baseball-card-gray-dark: 0 0% 31%;       /* Dark grays */
+
+    /* Aliases for semantic naming */
+    --baseball-card-bg-primary: 0 0% 99%;
+    --baseball-card-bg-secondary: 0 0% 100%;
+    --baseball-card-fg-primary: 0 0% 2%;
+    --baseball-card-fg-secondary: 0 0% 0%;
+    --baseball-card-accent-light: 0 0% 70%;
+    --baseball-card-accent-mid: 0 0% 50%;
+    --baseball-card-accent-dark: 0 0% 31%;
   }
 
   .dark {
@@ -62,6 +80,27 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  /* Baseball Card Team Themes */
+  .theme-dodgers {
+    /* SVG token names */
+    --baseball-card-light: 214 100% 97%;         /* Light blue backgrounds */
+    --baseball-card-white: 214 20% 99%;          /* Nearly white with blue tint */
+    --baseball-card-dark: 214 100% 25%;          /* Dodger Blue (#005A9C) */
+    --baseball-card-black: 214 80% 15%;          /* Dark navy blue */
+    --baseball-card-gray-light: 214 30% 75%;     /* Light blue-gray */
+    --baseball-card-gray-mid: 214 50% 50%;       /* Medium blue */
+    --baseball-card-gray-dark: 214 60% 35%;      /* Dark blue-gray */
+
+    /* Aliases for semantic naming */
+    --baseball-card-bg-primary: 214 100% 97%;
+    --baseball-card-bg-secondary: 214 20% 99%;
+    --baseball-card-fg-primary: 214 100% 25%;
+    --baseball-card-fg-secondary: 214 80% 15%;
+    --baseball-card-accent-light: 214 30% 75%;
+    --baseball-card-accent-mid: 214 50% 50%;
+    --baseball-card-accent-dark: 214 60% 35%;
   }
 }
 
@@ -98,5 +137,18 @@
 
   .gradient-perfect {
     background: linear-gradient(to bottom right, rgb(17 24 39), rgb(113 63 18));
+  }
+
+  /* Baseball Card Gradient Styles - Team Themes */
+  .gradient-dodgers {
+    background: linear-gradient(to bottom right, hsl(214 100% 97%), hsl(214 100% 25%));
+  }
+
+  .gradient-dodgers-light {
+    background: linear-gradient(135deg, hsl(214 100% 97%), hsl(214 50% 85%));
+  }
+
+  .gradient-dodgers-dark {
+    background: linear-gradient(135deg, hsl(214 100% 25%), hsl(214 80% 15%));
   }
 }
