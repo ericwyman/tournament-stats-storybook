@@ -6,7 +6,7 @@ Component library and documentation for the [Tournament Stats App](https://githu
 
 This repository hosts the Storybook component documentation separately from the main application. The main app is deployed on AWS, while Storybook remains on Vercel's free tier.
 
-**Live Storybook:** _[URL will be added after Vercel deployment]_
+**Live Storybook:** https://storybook-databot-ui.vercel.app
 
 ## Local Development
 
@@ -79,7 +79,7 @@ tournament-stats-storybook/
 
 This repository is deployed to Vercel automatically on push to `main`.
 
-**Deployment URL:** _[Will be added after setup]_
+**Deployment URL:** https://storybook-databot-ui.vercel.app
 
 ## Related Repositories
 
