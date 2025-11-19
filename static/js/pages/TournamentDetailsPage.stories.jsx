@@ -76,6 +76,10 @@ export const Features = {
             <li><strong>Error Handling:</strong> User-friendly error display with retry button</li>
             <li><strong>Breadcrumb Navigation:</strong> Home &gt; Tournaments &gt; Tournament Name</li>
             <li><strong>Back Button:</strong> Navigate to previous page using browser history</li>
+            <li><strong>Batting Statistics:</strong> Tournament-wide batting metrics (wOBA, OPS, HR, SB)</li>
+            <li><strong>Pitching Statistics:</strong> Tournament-wide pitching metrics (ERA, WHIP, FIP, K)</li>
+            <li><strong>Stat Leaderboards:</strong> Top 10 performers for batting and pitching categories</li>
+            <li><strong>Position Breakdown:</strong> Performance by batting and pitching positions</li>
             <li><strong>Top Performers Preview:</strong> Shows top 5 players by wOBA</li>
             <li><strong>Stadium Information:</strong> Prominent display of batting ratings</li>
             <li><strong>Responsive Design:</strong> Works on mobile, tablet, and desktop</li>
@@ -95,6 +99,36 @@ export const Features = {
               <h4 className="font-semibold mb-1">Stadium Information</h4>
               <p className="text-sm text-gray-700">
                 Shows stadium name and batting ratings for left and right-handed batters.
+              </p>
+            </div>
+            <div className="p-3 bg-amber-50 rounded border-l-4 border-amber-600">
+              <h4 className="font-semibold mb-1">Tournament Statistics (Batting)</h4>
+              <p className="text-sm text-gray-700">
+                Aggregated batting metrics: Total Players, Total Games, Avg wOBA, Avg OPS, Total HR, Total SB.
+              </p>
+            </div>
+            <div className="p-3 bg-red-50 rounded border-l-4 border-red-600">
+              <h4 className="font-semibold mb-1">Pitching Statistics</h4>
+              <p className="text-sm text-gray-700">
+                Aggregated pitching metrics: Total Pitchers, Total Games, Avg ERA, Avg WHIP, Avg FIP, Total K.
+              </p>
+            </div>
+            <div className="p-3 bg-indigo-50 rounded border-l-4 border-indigo-600">
+              <h4 className="font-semibold mb-1">Stat Leaderboards</h4>
+              <p className="text-sm text-gray-700">
+                Top 10 performers by category. Batting: wOBA, AVG, HR, RBI, SB. Pitching: ERA, FIP, WHIP, K/9, BB/9, SV, K.
+              </p>
+            </div>
+            <div className="p-3 bg-cyan-50 rounded border-l-4 border-cyan-600">
+              <h4 className="font-semibold mb-1">Position Breakdown</h4>
+              <p className="text-sm text-gray-700">
+                Performance by batting positions (C, 1B, 2B, 3B, SS, LF, CF, RF, DH) showing player count, top player, and avg wOBA.
+              </p>
+            </div>
+            <div className="p-3 bg-pink-50 rounded border-l-4 border-pink-600">
+              <h4 className="font-semibold mb-1">Pitching Position Breakdown</h4>
+              <p className="text-sm text-gray-700">
+                Performance by pitcher role (SP, RP) showing pitcher count, top pitcher by ERA, and avg ERA.
               </p>
             </div>
             <div className="p-3 bg-purple-50 rounded border-l-4 border-purple-600">
@@ -149,6 +183,11 @@ export const Features = {
             <div className="ml-8">└─ Tournament Content</div>
             <div className="ml-12">├─ Tournament Header Card</div>
             <div className="ml-12">├─ Stadium Information Card</div>
+            <div className="ml-12">├─ TournamentStats (Batting)</div>
+            <div className="ml-12">├─ PitchingTournamentStats</div>
+            <div className="ml-12">├─ StatLeaderboards</div>
+            <div className="ml-12">├─ PositionBreakdown</div>
+            <div className="ml-12">├─ PitchingPositionBreakdown</div>
             <div className="ml-12">└─ TopPerformersPreview</div>
           </div>
         </section>

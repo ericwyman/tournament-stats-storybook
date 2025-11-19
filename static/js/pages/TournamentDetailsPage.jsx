@@ -16,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Users, Trophy, TrendingUp, ChevronRight, BarChart3, Award, Target } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, TrendingUp, ChevronRight, BarChart3, Award, Target, Activity } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { cn } from '@/lib/utils';
 
@@ -237,11 +237,11 @@ function TournamentStats({ tournamentId }) {
           </div>
           <div className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
             <div className="text-sm font-medium text-muted-foreground mb-1">Avg wOBA</div>
-            <div className="text-3xl font-black">{stats.avgWoba.toFixed(3)}</div>
+            <div className="text-3xl font-black">{(Number(stats.avgWoba) || 0).toFixed(3)}</div>
           </div>
           <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20">
             <div className="text-sm font-medium text-muted-foreground mb-1">Avg OPS</div>
-            <div className="text-3xl font-black">{stats.avgOps.toFixed(3)}</div>
+            <div className="text-3xl font-black">{(Number(stats.avgOps) || 0).toFixed(3)}</div>
           </div>
           <div className="p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
             <div className="text-sm font-medium text-muted-foreground mb-1">Total Home Runs</div>
@@ -250,6 +250,127 @@ function TournamentStats({ tournamentId }) {
           <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20">
             <div className="text-sm font-medium text-muted-foreground mb-1">Total Stolen Bases</div>
             <div className="text-3xl font-black">{stats.totalStolenBases}</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Pitching Tournament Statistics Summary
+ */
+function PitchingTournamentStats({ tournamentId }) {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, [tournamentId]);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch pitchers - use SP and RP positions
+      const pitcherPositions = ['SP', 'RP', 'P'];
+      const cacheBuster = Date.now();
+      const positionPromises = pitcherPositions.map(pos =>
+        apiClient.getAggregatedStats({
+          tournament: tournamentId,
+          position: pos,
+          limit: 100,
+          _: cacheBuster,
+        })
+      );
+
+      const positionResults = await Promise.all(positionPromises);
+      const results = positionResults.flatMap(data => data.results || []);
+
+      // Filter to only include pitchers with innings pitched
+      const pitchers = results.filter(stat => (Number(stat.innings_pitched) || 0) > 0);
+      const totalPitchers = pitchers.length;
+      const totalGames = pitchers.reduce((sum, stat) => sum + (stat.games_played || 0), 0);
+
+      const avgEra = totalPitchers > 0
+        ? pitchers.reduce((sum, stat) => sum + (Number(stat.era) || 0), 0) / totalPitchers
+        : 0;
+      const avgWhip = totalPitchers > 0
+        ? pitchers.reduce((sum, stat) => sum + (Number(stat.whip) || 0), 0) / totalPitchers
+        : 0;
+      const avgFip = totalPitchers > 0
+        ? pitchers.reduce((sum, stat) => sum + (Number(stat.fip) || 0), 0) / totalPitchers
+        : 0;
+      const totalStrikeouts = pitchers.reduce((sum, stat) => sum + (stat.strikeouts_pitched || 0), 0);
+
+      setStats({
+        totalPitchers,
+        totalGames,
+        avgEra,
+        avgWhip,
+        avgFip,
+        totalStrikeouts,
+      });
+    } catch (err) {
+      console.error('Failed to fetch pitching stats:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card className="shadow-lg border-2 border-border">
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Skeleton key={i} className="h-20" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!stats || stats.totalPitchers === 0) return null;
+
+  return (
+    <Card className="shadow-lg border-2 border-border">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-2xl">
+          <Activity className="h-6 w-6" />
+          Pitching Statistics
+        </CardTitle>
+        <CardDescription className="text-base">Aggregated pitching performance metrics</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+            <div className="text-sm font-medium text-muted-foreground mb-1">Total Pitchers</div>
+            <div className="text-3xl font-black">{stats.totalPitchers}</div>
+          </div>
+          <div className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+            <div className="text-sm font-medium text-muted-foreground mb-1">Avg ERA</div>
+            <div className="text-3xl font-black">{(Number(stats.avgEra) || 0).toFixed(2)}</div>
+          </div>
+          <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
+            <div className="text-sm font-medium text-muted-foreground mb-1">Avg WHIP</div>
+            <div className="text-3xl font-black">{(Number(stats.avgWhip) || 0).toFixed(2)}</div>
+          </div>
+          <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20">
+            <div className="text-sm font-medium text-muted-foreground mb-1">Avg FIP</div>
+            <div className="text-3xl font-black">{(Number(stats.avgFip) || 0).toFixed(2)}</div>
+          </div>
+          <div className="p-4 rounded-xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
+            <div className="text-sm font-medium text-muted-foreground mb-1">Total Strikeouts</div>
+            <div className="text-3xl font-black">{stats.totalStrikeouts}</div>
+          </div>
+          <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20">
+            <div className="text-sm font-medium text-muted-foreground mb-1">Total Games</div>
+            <div className="text-3xl font-black">{stats.totalGames}</div>
           </div>
         </div>
       </CardContent>
@@ -275,23 +396,41 @@ function StatLeaderboards({ tournamentId }) {
       setLoading(true);
 
       // Fetch batters by position since pagination is blocked by Vercel SSO
-      const positions = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
+      const batterPositions = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
+      const pitcherPositions = ['SP', 'RP', 'P'];
       const cacheBuster = Date.now();
-      const positionPromises = positions.map(pos =>
+
+      // Fetch batters
+      const batterPromises = batterPositions.map(pos =>
         apiClient.getAggregatedStats({
           tournament: tournamentId,
           position: pos,
           limit: 100,
-          _: cacheBuster, // Cache buster to force fresh data
+          _: cacheBuster,
         })
       );
 
-      const positionResults = await Promise.all(positionPromises);
-      const results = positionResults.flatMap(data => data.results || []);
+      // Fetch pitchers
+      const pitcherPromises = pitcherPositions.map(pos =>
+        apiClient.getAggregatedStats({
+          tournament: tournamentId,
+          position: pos,
+          limit: 100,
+          _: cacheBuster,
+        })
+      );
+
+      const [batterResults, pitcherResults] = await Promise.all([
+        Promise.all(batterPromises),
+        Promise.all(pitcherPromises),
+      ]);
+
+      const batterData = batterResults.flatMap(data => data.results || []);
+      const pitcherData = pitcherResults.flatMap(data => data.results || []);
 
       // Create leaderboards for different stats
       // Filter for players with plate appearances for batting stats
-      const batters = results.filter(s => (s.plate_appearances || 0) > 0);
+      const batters = batterData.filter(s => (s.plate_appearances || 0) > 0);
       const battingLeaders = {
         woba: [...batters].sort((a, b) => (Number(b.woba) || 0) - (Number(a.woba) || 0)).slice(0, 10),
         avg: [...batters].sort((a, b) => (Number(b.batting_average) || 0) - (Number(a.batting_average) || 0)).slice(0, 10),
@@ -300,12 +439,16 @@ function StatLeaderboards({ tournamentId }) {
         sb: [...batters].sort((a, b) => (b.stolen_bases || 0) - (a.stolen_bases || 0)).slice(0, 10),
       };
 
-      // Pitching leaders (filter for pitchers if needed, or show all)
-      const pitchers = results.filter(s => (s.innings_pitched || 0) > 0);
+      // Pitching leaders - filter for pitchers with innings pitched
+      const pitchers = pitcherData.filter(s => (Number(s.innings_pitched) || 0) > 0);
       const pitchingLeaders = {
         era: [...pitchers].sort((a, b) => (Number(a.era) || 999) - (Number(b.era) || 999)).slice(0, 10),
         fip: [...pitchers].sort((a, b) => (Number(a.fip) || 999) - (Number(b.fip) || 999)).slice(0, 10),
         whip: [...pitchers].sort((a, b) => (Number(a.whip) || 999) - (Number(b.whip) || 999)).slice(0, 10),
+        k9: [...pitchers].sort((a, b) => (Number(b.k_per_9) || 0) - (Number(a.k_per_9) || 0)).slice(0, 10),
+        bb9: [...pitchers].sort((a, b) => (Number(a.bb_per_9) || 999) - (Number(b.bb_per_9) || 999)).slice(0, 10),
+        saves: [...pitchers].sort((a, b) => (b.saves || 0) - (a.saves || 0)).slice(0, 10),
+        strikeouts: [...pitchers].sort((a, b) => (b.strikeouts_pitched || 0) - (a.strikeouts_pitched || 0)).slice(0, 10),
       };
 
       setLeaderboards({ batting: battingLeaders, pitching: pitchingLeaders });
@@ -333,16 +476,20 @@ function StatLeaderboards({ tournamentId }) {
 
   const statCategories = {
     batting: [
-      { key: 'woba', label: 'wOBA', format: (v) => (v != null ? Number(v).toFixed(3) : '0.000') },
-      { key: 'avg', label: 'AVG', format: (v) => (v != null ? Number(v).toFixed(3) : '0.000') },
+      { key: 'woba', label: 'wOBA', format: (v) => (v != null && !isNaN(Number(v)) ? Number(v).toFixed(3) : '0.000') },
+      { key: 'avg', label: 'AVG', format: (v) => (v != null && !isNaN(Number(v)) ? Number(v).toFixed(3) : '0.000') },
       { key: 'hr', label: 'HR', format: (v) => v || 0 },
       { key: 'rbi', label: 'RBI', format: (v) => v || 0 },
       { key: 'sb', label: 'SB', format: (v) => v || 0 },
     ],
     pitching: [
-      { key: 'era', label: 'ERA', format: (v) => (v != null ? Number(v).toFixed(2) : '--') },
-      { key: 'fip', label: 'FIP', format: (v) => (v != null ? Number(v).toFixed(2) : '--') },
-      { key: 'whip', label: 'WHIP', format: (v) => (v != null ? Number(v).toFixed(2) : '--') },
+      { key: 'era', label: 'ERA', format: (v) => (v != null && !isNaN(Number(v)) ? Number(v).toFixed(2) : '--') },
+      { key: 'fip', label: 'FIP', format: (v) => (v != null && !isNaN(Number(v)) ? Number(v).toFixed(2) : '--') },
+      { key: 'whip', label: 'WHIP', format: (v) => (v != null && !isNaN(Number(v)) ? Number(v).toFixed(2) : '--') },
+      { key: 'k9', label: 'K/9', format: (v) => (v != null && !isNaN(Number(v)) ? Number(v).toFixed(1) : '--') },
+      { key: 'bb9', label: 'BB/9', format: (v) => (v != null && !isNaN(Number(v)) ? Number(v).toFixed(1) : '--') },
+      { key: 'saves', label: 'SV', format: (v) => v || 0 },
+      { key: 'strikeouts', label: 'K', format: (v) => v || 0 },
     ],
   };
 
@@ -419,7 +566,11 @@ function StatLeaderboards({ tournamentId }) {
                 'sb': 'stolen_bases',
                 'era': 'era',
                 'fip': 'fip',
-                'whip': 'whip'
+                'whip': 'whip',
+                'k9': 'k_per_9',
+                'bb9': 'bb_per_9',
+                'saves': 'saves',
+                'strikeouts': 'strikeouts_pitched'
               };
               const fieldName = fieldMap[selectedStat] || selectedStat;
               const statValue = stat[fieldName] || 0;
@@ -501,10 +652,10 @@ function PositionBreakdown({ tournamentId }) {
       // Group by position
       const grouped = {};
       positions.forEach(pos => {
-        const posPlayers = results.filter(s => s.player.position === pos);
+        const posPlayers = results.filter(s => s.player.position === pos && (s.plate_appearances || 0) > 0);
         if (posPlayers.length > 0) {
-          const avgWoba = posPlayers.reduce((sum, s) => sum + (s.woba || 0), 0) / posPlayers.length;
-          const topPlayer = [...posPlayers].sort((a, b) => (b.woba || 0) - (a.woba || 0))[0];
+          const avgWoba = posPlayers.reduce((sum, s) => sum + (Number(s.woba) || 0), 0) / posPlayers.length;
+          const topPlayer = [...posPlayers].sort((a, b) => (Number(b.woba) || 0) - (Number(a.woba) || 0))[0];
           grouped[pos] = {
             count: posPlayers.length,
             avgWoba,
@@ -567,15 +718,14 @@ function PositionBreakdown({ tournamentId }) {
                   <div className="text-xs text-muted-foreground mb-2">
                     {data.count} player{data.count !== 1 ? 's' : ''}
                   </div>
-                  <div className="text-sm font-medium text-muted-foreground">Avg wOBA</div>
-                  <div className="text-xl font-black">{data.avgWoba.toFixed(3)}</div>
+                  <div className="text-xs font-bold truncate">
+                    {data.topPlayer.player.first_name} {data.topPlayer.player.last_name}
+                  </div>
+                  <div className="text-xl font-black">{(Number(data.topPlayer.woba) || 0).toFixed(3)}</div>
                   <div className="mt-2 pt-2 border-t border-border">
-                    <div className="text-xs text-muted-foreground mb-1">Top Player</div>
-                    <div className="text-xs font-bold truncate">
-                      {data.topPlayer.player.first_name} {data.topPlayer.player.last_name}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {(data.topPlayer.woba || 0).toFixed(3)}
+                    <div className="text-xs text-muted-foreground mb-1">Avg wOBA</div>
+                    <div className="text-sm font-medium">
+                      {(Number(data.avgWoba) || 0).toFixed(3)}
                     </div>
                   </div>
                 </div>
@@ -591,6 +741,130 @@ function PositionBreakdown({ tournamentId }) {
         >
           View All Position Leaders
         </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Pitching Position Breakdown Component (SP/RP)
+ */
+function PitchingPositionBreakdown({ tournamentId }) {
+  const [positionData, setPositionData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const positions = ['SP', 'RP'];
+
+  useEffect(() => {
+    fetchPositionData();
+  }, [tournamentId]);
+
+  const fetchPositionData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch each pitcher position separately
+      const cacheBuster = Date.now();
+      const positionPromises = positions.map(pos =>
+        apiClient.getAggregatedStats({
+          tournament: tournamentId,
+          position: pos,
+          limit: 100,
+          _: cacheBuster,
+        })
+      );
+
+      const positionResults = await Promise.all(positionPromises);
+      const results = positionResults.flatMap(data => data.results || []);
+
+      // Group by position
+      const grouped = {};
+      positions.forEach(pos => {
+        const posPitchers = results.filter(s => s.player.position === pos && (Number(s.innings_pitched) || 0) > 0);
+        if (posPitchers.length > 0) {
+          const avgEra = posPitchers.reduce((sum, s) => sum + (Number(s.era) || 0), 0) / posPitchers.length;
+          // Sort by ERA (lower is better)
+          const topPitcher = [...posPitchers].sort((a, b) => (Number(a.era) || 999) - (Number(b.era) || 999))[0];
+          grouped[pos] = {
+            count: posPitchers.length,
+            avgEra,
+            topPitcher,
+          };
+        }
+      });
+
+      setPositionData(grouped);
+    } catch (err) {
+      console.error('Failed to fetch pitching position data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card className="shadow-lg border-2 border-border">
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3">
+            {positions.map((pos) => (
+              <Skeleton key={pos} className="h-32" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!positionData || Object.keys(positionData).length === 0) return null;
+
+  return (
+    <Card className="shadow-lg border-2 border-border">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-2xl">
+          <Activity className="h-6 w-6" />
+          Pitching Position Breakdown
+        </CardTitle>
+        <CardDescription className="text-base">
+          Performance by pitcher role
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-3">
+          {positions.map((pos) => {
+            const data = positionData[pos];
+            if (!data) return null;
+
+            const posLabel = pos === 'SP' ? 'Starting Pitchers' : 'Relief Pitchers';
+
+            return (
+              <div
+                key={pos}
+                className="p-4 rounded-xl border-2 border-border bg-gradient-to-br from-muted/20 to-muted/40"
+              >
+                <div className="text-center">
+                  <div className="text-lg font-black text-primary mb-1">{pos}</div>
+                  <div className="text-xs text-muted-foreground mb-2">
+                    {data.count} {posLabel.toLowerCase()}
+                  </div>
+                  <div className="text-xs font-bold truncate">
+                    {data.topPitcher.player.first_name} {data.topPitcher.player.last_name}
+                  </div>
+                  <div className="text-xl font-black">{(Number(data.topPitcher.era) || 0).toFixed(2)}</div>
+                  <div className="text-xs text-muted-foreground">ERA</div>
+                  <div className="mt-2 pt-2 border-t border-border">
+                    <div className="text-xs text-muted-foreground mb-1">Avg ERA</div>
+                    <div className="text-sm font-medium">
+                      {(Number(data.avgEra) || 0).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );
@@ -715,7 +989,7 @@ function TopPerformersPreview({ tournamentId }) {
             </div>
             <div className="text-right">
               <div className="text-2xl font-black">
-                {(stat.woba || 0).toFixed(3)}
+                {(Number(stat.woba) || 0).toFixed(3)}
               </div>
               <div className="text-xs text-muted-foreground uppercase tracking-wide">wOBA</div>
             </div>
@@ -880,11 +1154,17 @@ export default function TournamentDetailsPage() {
                 {/* Tournament Statistics */}
                 <TournamentStats tournamentId={tournament.id} />
 
+                {/* Pitching Statistics */}
+                <PitchingTournamentStats tournamentId={tournament.id} />
+
                 {/* Stat Leaderboards */}
                 <StatLeaderboards tournamentId={tournament.id} />
 
                 {/* Position Breakdown */}
                 <PositionBreakdown tournamentId={tournament.id} />
+
+                {/* Pitching Position Breakdown */}
+                <PitchingPositionBreakdown tournamentId={tournament.id} />
 
                 {/* Top Performers Preview */}
                 <TopPerformersPreview tournamentId={tournament.id} />
